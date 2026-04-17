@@ -1,5 +1,5 @@
 def main():
-    print("Welcome to the Color Analyzer Home page")
+    print("Welcome to the Color Analyzer home page")
     while True:
         print("Choose an option.")
         print("1. Begin New Analysis")
