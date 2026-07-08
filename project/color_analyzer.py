@@ -5,6 +5,9 @@ import os
 from datetime import datetime
 
 
+
+
+
 class WristColorAnalyzer:
     #from color_analyzer import WristColorAnalyzer
     ALLOWED_FORMATS=["jpg", "jpeg", "png"]
@@ -55,11 +58,13 @@ class WristColorAnalyzer:
         if self.image is None:
             raise ValueError("Could not read image.")
         
-    def get_center_region(self, size=200):
-        h, w, _ = self.image.shape 
+    def get_center_region(self):
+        h, w = self.image.shape[:2]
+        size=int(min(h,w)*0.6)
+        cy,cx=h//2,w//2
         return self.image[
-            h//2 - size//2 : h//2 + size//2,
-            w//2 - size//2 : w//2 + size//2          
+            cy-size//2 : cy+size//2,
+            cx-size//2 : cx+size//2          
         ]
     
     def analyze(self):
@@ -71,10 +76,11 @@ class WristColorAnalyzer:
             raise ValueError("Image is too dark for proper analysis.")
         if brightness> 220:
             raise ValueError("Image is too bright, take a picture with lower exposure.")
-        hsv=cv2.cvtColor(center, cv2.COLOR_BGR2HSV)
-        lower_skin = np.array([0,30,60])
-        upper_skin = np.array([25,255,255])
-        skin_mask = cv2.inRange(hsv,lower_skin,upper_skin)
+        blurred=cv2.GaussianBlur(center,(3,3),0)
+        hsv=cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
+        mask_low = cv2.inRange(hsv,np.array([0,15,50]),np.array([30,255,255]))
+        mask_high = cv2.inRange(hsv, np.array([170,15,50]), np.array([180,255,255]))
+        skin_mask = cv2.bitwise_or(mask_low, mask_high)
         skin_pixels=center[skin_mask>0]
         if len(skin_pixels) == 0 :
             raise ValueError("No skin was detected on your image. Use image where wrist is shown in the center, and there is enough natural light")
@@ -95,20 +101,20 @@ class WristColorAnalyzer:
         else:
             self.skin_description="neutral"
         brightness=(0.299*r+0.587*g+0.114*b)
-        if brightness>200:
+        if brightness>180:
             self.skin_type="Ivory skin"
-        elif brightness>150:
+        elif brightness>130:
             self.skin_type="Fair skin"
         else:
             self.skin_type="Olive skin"
 
-        lower_blue=np.array([90,40,20])
+        lower_blue=np.array([90,10,20])
         upper_blue=np.array([140,255,255])
         blue_mask=cv2.inRange(hsv,lower_blue,upper_blue)
-        lower_green=np.array([35,40,20])
+        lower_green=np.array([35,10,20])
         upper_green=np.array([85,255,255])
         green_mask=cv2.inRange(hsv,lower_green,upper_green)
-        lower_purple=np.array([140,40,20])
+        lower_purple=np.array([140,10,20])
         upper_purple=np.array([165, 255, 255])
         purple_mask= cv2.inRange(hsv,lower_purple,upper_purple)
         blue_count=np.sum(blue_mask>0)
@@ -160,7 +166,7 @@ class WristColorAnalyzer:
 
     def get_results(self):
         return{
-            "skin_rgb": self.skin_color,
+            "skin_rgb": self.skin_color.tolist(),
             "skin_hex": '#{:02x}{:02x}{:02x}'.format(*self.skin_color),
             "skin_type": self.skin_type,
             "skin_description": self.skin_description,
@@ -179,15 +185,8 @@ class WristColorAnalyzer:
         
     #records = WristColorAnalyzer.get_all_records()
 
+    
     def run_analysis(self):
-        try:
             self.analyze()
             self.save_to_database()
-
             return self.get_results()
-        except FileNotFoundError:
-            return{"Error, image file was not found "}
-        except ValueError as error:
-            return{"Error": str(error)}
-        except:
-            return{"Error, something is wrong"}
