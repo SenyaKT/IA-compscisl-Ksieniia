@@ -156,6 +156,8 @@ def classify_season(answers, wrist_data=None):
         "dark_brown":["Deep Autumn","True Winter","Deep Winter","Warm Autumn"],
         "black":["True Winter","Deep Winter","Bright Winter","Cool Winter"]
     }
+    for s in eye_map.get(eye,[]):
+        scores[s]+=1
 
     lip=answers.get("lip_color","neutral")
     lip_map={
