@@ -5,7 +5,7 @@ import shutil
 import os
 
 from season_dict import classify_season, SEASONS
-from season_questionnaire import QUESTIONS, all_answered
+from season_questionnaire import QUESTIONS, answered
 from color_analyzer import WristColorAnalyzer
 from database import create_history_table, save_analysis, get_history
 
@@ -26,7 +26,7 @@ WINDOW_HEIGHT=700
 
 UPLOAD_FOLDER="uploads"
 
-class HomePage(ctk.CTkFrame):
+class Home(ctk.CTkFrame):
     def __init__(self,parent, app):
         super().__init__(parent, fg_color=BACKGROUND_COLOR)
         self.app=app
@@ -47,7 +47,7 @@ class HomePage(ctk.CTkFrame):
         self.app.wrist_data=None
         self.app.show_page("questionnaire")
 
-class QuestionnairePage(ctk.CTkFrame):
+class Questionnaire_Page(ctk.CTkFrame):
     def __init__(self,parent,app):
         super().__init__(parent,fg_color=BACKGROUND_COLOR)
         self.app=app
@@ -68,13 +68,13 @@ class QuestionnairePage(ctk.CTkFrame):
         answers={}
         for key ,var in self.selected.items():
             answers[key]=var.get()
-        if not all_answered(answers):
+        if not answered(answers):
             messagebox.showwarning("Incomplete","Please answer all questions.")
             return
         self.app.answers=answers
         self.app.show_page("photo")
     
-class PhotoPage(ctk.CTkFrame):
+class Photo(ctk.CTkFrame):
     def __init__(self,parent,app):
         super().__init__(parent,fg_color=BACKGROUND_COLOR)
         self.app=app

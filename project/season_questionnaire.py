@@ -83,7 +83,7 @@ QUESTIONS=[
     }          
 ]
 
-def all_answered(answers):
+def answered(answers):
     for q in QUESTIONS:
         if not answers.get(q["key"]):
             return False
