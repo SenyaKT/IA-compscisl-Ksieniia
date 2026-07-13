@@ -7,7 +7,7 @@ QUESTIONS=[
                 ("Cool (pink / blue / rosy)", "cool"),
                 ("Neutral (a mix / unsure)", "neutral")
                     ]
-    }
+    },
     { 
         "key": "skin_depth",
         "text": "What is your skin depth?",
@@ -16,7 +16,7 @@ QUESTIONS=[
                 ("Medium", "medium"),
                 ("Deep", "deep")
                 ]            
-    }
+    },
     { 
         "key": "hair_color",
         "text": "What is your hair color?",
@@ -30,20 +30,20 @@ QUESTIONS=[
                 ("Auburn", "auburn"),
                 ("Grey", "grey")
                 ]
-    }
+    },
     { 
         "key": "eye_color",
         "text": "What is your eye color?",
         "options":[
                 ("Light blue", "light_blue"), 
-                ("Light green", "light_green"),
+                ("Light grey", "light_grey"),
                 ("Green", "green"),
                 ("Hazel", "hazel"),
                 ("Medium brown", "medium_brown"),
                 ("Dark brown", "dark_brown"),
                 ("Black", "black")
                 ]
-    }
+    },
     { 
         "key": "lip_color",
         "text": "What is your lip color?",
@@ -53,7 +53,7 @@ QUESTIONS=[
                 ("Warm peach", "warm_peach"),
                 ("Warm brown", "warm_brown")
                 ]
-    }
+    },
     { 
         "key": "vein_color",
         "text": "What is your vein color?",
@@ -62,16 +62,16 @@ QUESTIONS=[
                 ("Green", "green"),
                 ("Mixed", "mixed")
                 ]
-    } 
+    } ,
     { 
         "key": "contrast_level",
         "text": "What is your appearance contrast level?",
         "options":[
-                ("Low", "blue_purple"), 
+                ("Low", "low"), 
                 ("Medium", "medium"),
                 ("High", "high")
                 ]
-    }
+    },
     { 
         "key": "skin_clarity",
         "text": "What is your skin clarity and freshness?",
@@ -80,8 +80,7 @@ QUESTIONS=[
                 ("Muted", "muted"),
                 ("Mixed", "mixed")
                 ]
-    }
-             
+    }          
 ]
 
 def all_answered(answers):
