@@ -80,4 +80,3 @@ def get_history():
         return history_function
 
                        
-                       

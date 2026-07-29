@@ -49,14 +49,16 @@ class WristColorAnalyzer:
     def validate_image(self):
         if not os.path.exists(self.image_path):
             raise  FileNotFoundError("Image is not found.")
-        ext=self.image_path.split(".")[-1].lower()
-        if ext not in self.ALLOWED_FORMATS:
-            raise ValueError("Invalid format of picture. Use jpg, jpeg or png.")
+        filetype=self.image_path.split(".")[-1].lower()
+        if filetype not in self.ALLOWED_FORMATS:
+            raise ValueError("Invalid format of picture. File format" + filetype + "is not supported. Upload in jpg, jpeg or png.")
 
     def load_image(self):
         self.image = cv2.imread(self.image_path)
         if self.image is None:
-            raise ValueError("Could not read image.")
+            raise ValueError("Could not read image, please try again")
+        if self.image.shape[2]==4:
+            self.image=cv2.cvtColor(self.image,cv2.COLOR_BGRA2BGR)
         
     def get_center_region(self):
         h, w = self.image.shape[:2]
@@ -73,9 +75,9 @@ class WristColorAnalyzer:
         center=self.get_center_region()
         brightness=np.mean(center)
         if brightness<40:
-            raise ValueError("Image is too dark for proper analysis.")
+            raise ValueError("Image is too dark for proper analysis, try to retake the photo in natural light.")
         if brightness> 220:
-            raise ValueError("Image is too bright, take a picture with lower exposure.")
+            raise ValueError("Image is too bright, take a picture with lower exposure or different lighing.")
         blurred=cv2.GaussianBlur(center,(3,3),0)
         hsv=cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
         mask_low = cv2.inRange(hsv,np.array([0,15,50]),np.array([30,255,255]))
@@ -83,9 +85,9 @@ class WristColorAnalyzer:
         skin_mask = cv2.bitwise_or(mask_low, mask_high)
         skin_pixels=center[skin_mask>0]
         if len(skin_pixels) == 0 :
-            raise ValueError("No skin was detected on your image. Use image where wrist is shown in the center, and there is enough natural light")
+            raise ValueError("No skin was detected on your image. Use image where wrist is shown in the center, and visible clearly")
         if len(skin_pixels)<500:
-            raise ValueError("Not enough skin area was detected on your image, reupload with wrist in the center.")
+            raise ValueError("Not enough skin area was detected on your image, reupload with wrist in the center closely to camera.")
         skin_rgb=np.mean(
             cv2.cvtColor(skin_pixels.reshape(-1,1,3), cv2.COLOR_BGR2RGB),
             axis=0
