@@ -47,6 +47,8 @@ class Home(ctk.CTkFrame):
         self.app.username=name
         self.app.answers={}
         self.app.wrist_data=None
+        self.app.pages["photo"].image_path=None
+        self.app.pages["photo"].preview.configure(text="No photo selected yet.")
         self.app.show_page("questionnaire")
 
 class Questionnaire_Page(ctk.CTkFrame):
@@ -92,38 +94,38 @@ class Photo(ctk.CTkFrame):
         ctk.CTkButton(button_row, text="Analyze and Continue",font=BUTTON_FONT, fg_color=BUTTON_COLOR,hover_color=BUTTON_HOVER_COLOR, text_color=TEXT_COLOR,width=138,height=38,command=self.analyze).pack(side="left",padx=10)
         
     def choose_photo(self):
-            path=filedialog.askopenfilename(title="Select wrist photo", filetypes=[("Image files","*.jpg *.jpeg *.png")])
-            print("Selected path:",path)
-            if not path:
-                return
-            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-            destination=os.path.join(UPLOAD_FOLDER,os.path.basename(path))
-            shutil.copy(path,destination)
-            self.image_path=destination
-            self.preview.configure(text=os.path.basename(path))
-            print("Image path set to:", self.image_path)
+        path=filedialog.askopenfilename(title="Select wrist photo", filetypes=[("Image files","*.jpg *.jpeg *.png")])
+        print("Selected path:",path)
+        if not path:
+            return
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        destination=os.path.join(UPLOAD_FOLDER,os.path.basename(path))
+        shutil.copy(path,destination)
+        self.image_path=destination
+        self.preview.configure(text=os.path.basename(path))
+        print("Image path set to:", self.image_path)
 
     def skip(self):
-            self.app.wrist_data=None
-            self.app.run_classification()
+        self.app.wrist_data=None
+        self.app.run_classification()
 
     def analyze(self):
-            if not self.image_path:
-                messagebox.showinfo("No photo", "Continuing without a photo")
-                self.app.wrist_data=None
-                self.app.run_classification()
-                return
-            try:
-                analyzer=WristColorAnalyzer(self.image_path)
-                result=analyzer.run_analysis()
-                self.app.wrist_data=result
-                self.app.run_classification()
-            except FileNotFoundError as e:
-                messagebox.showerror("File not found", str(e))
-            except ValueError as e:
-                messagebox.showerror("Photo issue", str(e))
-            except Exception as e:
-                messagebox.showerror("Error", str(e))
+        if not self.image_path:
+            messagebox.showinfo("No photo", "Continuing without a photo")
+            self.app.wrist_data=None
+            self.app.run_classification()
+            return
+        try:
+            analyzer=WristColorAnalyzer(self.image_path)
+            result=analyzer.run_analysis()
+            self.app.wrist_data=result
+            self.app.run_classification()
+        except FileNotFoundError as e:
+            messagebox.showerror("File not found", str(e))
+        except ValueError as e:
+            messagebox.showerror("Photo issue", str(e))
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
         
 class Results(ctk.CTkFrame):
     def __init__(self,parent,app):

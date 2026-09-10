@@ -124,7 +124,7 @@ def classify_season(answers, wrist_data=None):
         for s in low_contrast:
             scores[s]+=3
 
-    clarity=answers.get("skin_clarity","mmuted")
+    clarity=answers.get("skin_clarity","muted")
     if clarity=="bright":
         for s in ["Bright Spring","Bright Winter","True Spring","True Winter"]:
             scores[s]+=3
