@@ -1,74 +1,89 @@
+#GUI code for the application
+
+#Importing necessary libraries
 import sys 
-sys.path.append("D:/Lib/site-packages")
-import customtkinter as ctk
-from tkinter import filedialog, messagebox
-from PIL import Image, ImageTk
+sys.path.append("D:/Lib/site-packages") #libruary path for customtkinter
+import customtkinter as ctk #shortcut for customtkinter -  extension of tkinter with more features such as styling and appearence
+from tkinter import filedialog, messagebox #short cut to features in tkinter
+from PIL import Image, ImageTk 
 import shutil
 import os
 
+#Importing modules with logic to make this file a main combination logic
 from season_dict import classify_season, SEASONS
 from season_questionnaire import QUESTIONS, answered
 from color_analyzer import WristColorAnalyzer
 from database import create_history_table, save_analysis, get_history
 
+#Styling for the app that can be used later on in code
+#These are constant values and if changed here can update whole app
 BACKGROUND_COLOR ="#F5F5F5"
 SIDEBAR_COLOR= "#E8E8E8"
 BUTTON_COLOR = "#B5C8D8"
-BUTTON_HOVER_COLOR = "#9bb5c8"
+BUTTON_HOVER_COLOR = "#9bb5c8" #On mouse hover
 TEXT_COLOR="#2C2C2C"
-CARD_COLOR="#FAC6C6"
+CARD_COLOR="#FAC6C6" #Scrollable frames
 
 TITLE_FONT=("Arial", 22, "bold")
 HEADING_FONT=("Arial", 15, "bold")
 NORMAL_FONT=("Arial", 13)
 BUTTON_FONT=("Arial", 13, "bold")
 
+#Size of the window opening
 WINDOW_WIDTH=1000
 WINDOW_HEIGHT=700
 
+#Uploaded photos are copied to this folder
 UPLOAD_FOLDER="uploads"
 
+#Five page Classes 
+
+#Page 1 is Home , first screen seen by user and collects initial information
 class Home(ctk.CTkFrame):
-    def __init__(self,parent, app):
+    def __init__(self,parent, app): #Calls Custom tkinter frame to create window
         super().__init__(parent, fg_color=BACKGROUND_COLOR)
-        self.app=app
+        self.app=app #reference to be able to show the page
+#Adds labels and buttons to the page, with needed format and size, by calling customtkinter functions
         ctk.CTkLabel(self, text="Personal Color Analysis", font=TITLE_FONT, text_color=TEXT_COLOR).pack(pady=(80,10))
         ctk.CTkLabel(self, text="Find your seasonal color palette.\nAnswer 8 questions and upload wrist photo.", font=NORMAL_FONT, text_color=TEXT_COLOR, justify="center").pack(pady=10)
         ctk.CTkLabel(self, text="Type your name:", font=NORMAL_FONT, text_color=TEXT_COLOR).pack(pady=(30,5))
-        self.name_entry=ctk.CTkEntry(self, width=220, font=NORMAL_FONT)
+
+        self.name_entry=ctk.CTkEntry(self, width=220, font=NORMAL_FONT)#for user input
         self.name_entry.pack(pady=5)
         ctk.CTkButton(self, text="Start analysis", font=BUTTON_FONT, fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR,text_color=TEXT_COLOR, width=180, height=38, command=self.start).pack(pady=20)
 
-    def start(self):
+    def start(self): #beggins with a check of name
         name=self.name_entry.get().strip()
-        if not name:
+        if not name: #Error if no name
             messagebox.showerror("Name required","Please enter your name.")
             return
         self.app.username=name
-        self.app.answers={}
-        self.app.wrist_data=None
+        self.app.answers={} #resets analysis
+        self.app.wrist_data=None #resets photo data
         self.app.pages["photo"].image_path=None
         self.app.pages["photo"].preview.configure(text="No photo selected yet.")
-        self.app.show_page("questionnaire")
+        self.app.show_page("questionnaire") #changes to questionaire page 
 
+#Page 2 , Questionnaire
 class Questionnaire_Page(ctk.CTkFrame):
     def __init__(self,parent,app):
-        super().__init__(parent,fg_color=BACKGROUND_COLOR)
+        super().__init__(parent,fg_color=BACKGROUND_COLOR) #Initializes the frame function from customtkinter
         self.app=app
         self.selected={}
         ctk.CTkLabel(self,text="Questionnaire", font=TITLE_FONT, text_color=TEXT_COLOR).pack(pady=(20,10))
         scroll=ctk.CTkScrollableFrame(self, fg_color=CARD_COLOR, width=680, height=420)
-        scroll.pack(pady=5)
-        for q in QUESTIONS:
+        scroll.pack(pady=5) #Makes it scrollable 
+        for q in QUESTIONS: #itterates and arranges all 8 questions in scrollable frame
             ctk.CTkLabel(scroll,text=q["text"], font=HEADING_FONT, text_color=TEXT_COLOR,anchor="w").pack(fill="x", padx=15,pady=(12,4))
-            var=ctk.StringVar(value="")
+            var=ctk.StringVar(value="") #ctk empty variable for selecting radio buttons
             self.selected[q["key"]]=var
-            for label,value in q["options"]:
+            for label,value in q["options"]: #match the questions , radio buttons for options to select
                 ctk.CTkRadioButton(scroll, text=label,variable=var,value=value,font=NORMAL_FONT,text_color=TEXT_COLOR,fg_color=BUTTON_COLOR).pack(anchor="w",padx=35,pady=2)
-        
+        #labels are seen and value used for scoring - its a tuple
         ctk.CTkButton(self,text="Continue", font=BUTTON_FONT, fg_color=BUTTON_COLOR,hover_color=BUTTON_HOVER_COLOR, text_color=TEXT_COLOR,width=180,height=38, command=self.submit).pack(pady=15)
 
     def submit(self):
+        #Collects radio buttons keys  and validates it through loop
         answers={}
         for key ,var in self.selected.items():
             answers[key]=var.get()
@@ -76,46 +91,50 @@ class Questionnaire_Page(ctk.CTkFrame):
             messagebox.showwarning("Incomplete","Please answer all questions.")
             return
         self.app.answers=answers
-        self.app.show_page("photo")
-    
+        self.app.show_page("photo") #proceedes to next page if no problems found
+
+#Page 3 is Photo uploading page
 class Photo(ctk.CTkFrame):
-    def __init__(self,parent,app):
+    def __init__(self,parent,app): #initializes ctk
         super().__init__(parent,fg_color=BACKGROUND_COLOR)
         self.app=app
-        self.image_path=None
+        self.image_path=None #stores local path of the image after copy
         ctk.CTkLabel(self, text="Wrist Photo", font=TITLE_FONT , text_color=TEXT_COLOR).pack(pady=(50,10))
         ctk.CTkLabel(self, text="You may appload a photo of your inner wrist taken under natural daylight.\nWrist must be in the center of the photo, visible clearly.\n Formats Accepted: JPG, JPEG, PNG",font=NORMAL_FONT,text_color=TEXT_COLOR, justify="center").pack(pady=10)
+#To show file name of selected photo
         self.preview=ctk.CTkLabel(self, text="No photo selected yet.",font=NORMAL_FONT,text_color=TEXT_COLOR)
-        self.preview.pack(pady=15)
+        self.preview.pack(pady=15) #creates buttons and labels with ctk funtion
         ctk.CTkButton(self, text="Choose Photo from device",font=BUTTON_FONT, fg_color=BUTTON_COLOR,hover_color=BUTTON_HOVER_COLOR, text_color=TEXT_COLOR,width=180,height=38,command=self.choose_photo).pack(pady=5)
         button_row=ctk.CTkFrame(self,fg_color="transparent")
         button_row.pack(pady=20)
         ctk.CTkButton(button_row, text="Skip",font=BUTTON_FONT, fg_color="#CCCCCC",hover_color="#BBBBBB", text_color=TEXT_COLOR,width=130,height=38,command=self.skip).pack(side="left",padx=10)
         ctk.CTkButton(button_row, text="Analyze and Continue",font=BUTTON_FONT, fg_color=BUTTON_COLOR,hover_color=BUTTON_HOVER_COLOR, text_color=TEXT_COLOR,width=138,height=38,command=self.analyze).pack(side="left",padx=10)
-        
+
+    # Opens file dialog which selects photo copies to uploads folder, saves path  
     def choose_photo(self):
         path=filedialog.askopenfilename(title="Select wrist photo", filetypes=[("Image files","*.jpg *.jpeg *.png")])
         print("Selected path:",path)
         if not path:
-            return
-        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+            return #if cancelled
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True) #Creates folder if doesnt exist
         destination=os.path.join(UPLOAD_FOLDER,os.path.basename(path))
-        shutil.copy(path,destination)
+        shutil.copy(path,destination) #copy to local
         self.image_path=destination
+        #Updates label with name of file
         self.preview.configure(text=os.path.basename(path))
         print("Image path set to:", self.image_path)
 
-    def skip(self):
+    def skip(self):#Classificaion without photo analysis
         self.app.wrist_data=None
         self.app.run_classification()
 
     def analyze(self):
-        if not self.image_path:
+        if not self.image_path: 
             messagebox.showinfo("No photo", "Continuing without a photo")
             self.app.wrist_data=None
             self.app.run_classification()
             return
-        try:
+        try: #tries to run analusis, raises message errors
             analyzer=WristColorAnalyzer(self.image_path)
             result=analyzer.run_analysis()
             self.app.wrist_data=result
@@ -126,21 +145,22 @@ class Photo(ctk.CTkFrame):
             messagebox.showerror("Photo issue", str(e))
         except Exception as e:
             messagebox.showerror("Error", str(e))
-        
+
+#Page 4 is Result page , displauing classified season name , description, 10 color boxes and 2 outfit combinations
 class Results(ctk.CTkFrame):
     def __init__(self,parent,app):
-          super().__init__(parent,fg_color=BACKGROUND_COLOR)
-          self.app=app
-          self.content=ctk.CTkScrollableFrame(self,fg_color=BACKGROUND_COLOR)
+          super().__init__(parent,fg_color=BACKGROUND_COLOR) #Initializes ctk
+          self.app=app 
+          self.content=ctk.CTkScrollableFrame(self,fg_color=BACKGROUND_COLOR) #scrollable if too long
           self.content.pack(fill="both",expand=True,padx=10,pady=10)
         
     def show_results(self,result):
-        for widget in self.content.winfo_children():
-              widget.destroy()
+        for widget in self.content.winfo_children(): 
+              widget.destroy() #clears previous results
         ctk.CTkLabel(self.content, text="Your Personal Season:" + result["season_name"], font=TITLE_FONT,text_color=TEXT_COLOR).pack(pady=(20,5))
         ctk.CTkLabel(self.content,text=result["description"], font=NORMAL_FONT,text_color=TEXT_COLOR,wraplength=600,justify="center").pack(pady=(0,15))
         ctk.CTkLabel(self.content,text="Your color palette", font=HEADING_FONT,text_color=TEXT_COLOR).pack(pady=(10,5))
-        for rows in range(0,10,5):
+        for rows in range(0,10,5): #swatches of colors are in rows of 5 , whcih means they must be sliced in half
              row=ctk.CTkFrame(self.content,fg_color="transparent")
              row.pack(pady=3)
              for hexcolors in result["best_colors"][rows:rows+5]:
@@ -158,36 +178,39 @@ class Results(ctk.CTkFrame):
         ctk.CTkButton(self.content,text="Previous analysis",font=BUTTON_FONT,fg_color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR, text_color=TEXT_COLOR,width=180,height=38,command=lambda:self.app.show_page("history")).pack(pady=20)
 
     def draw_swatch(self,parent,hexcolors,size):
-            boximage=Image.new("RGB",(size,size),hexcolors)
+            #creates colored square with hex label
+            boximage=Image.new("RGB",(size,size),hexcolors) #Uses PIL
             imagecolor=ctk.CTkImage(light_image=boximage,size=(size,size))
             frame=ctk.CTkFrame(parent,fg_color="transparent")
             frame.pack(side="left",padx=4,pady=4)
             label=ctk.CTkLabel(frame,image=imagecolor,text="")
-            label.image=imagecolor
+            label.image=imagecolor #Reference to image so swatch appears each time
             label.pack()
             ctk.CTkLabel(frame,text=hexcolors,font=("Arial",9),text_color=TEXT_COLOR).pack()
 
+#Page 5 is History page
 class History(ctk.CTkFrame):
     def __init__(self,parent,app):
         super().__init__(parent,fg_color=BACKGROUND_COLOR)
         self.app=app
         ctk.CTkLabel(self,text="Recent Analyzes", font=TITLE_FONT,text_color=TEXT_COLOR).pack(pady=(20,10))
         self.list=ctk.CTkScrollableFrame(self,fg_color=CARD_COLOR,width=700,height=450)
-        self.list.pack(pady=10)
-    def clear(self):
+        self.list.pack(pady=10) #Creates label text and scrollabel frame
+    def clear(self): #Open up to date
         for widget in self.list.winfo_children():
             widget.destroy()
-        records=get_history()
+        records=get_history() #Retrieves records 
         if not records:
             ctk.CTkLabel(self.list,text="No analyses here yet",font=NORMAL_FONT,text_color=TEXT_COLOR).pack(pady=20)
             return
-        for entry in records:
+        for entry in records: #Horizontal rows loop to display all records with season name, score and date
             row=ctk.CTkFrame(self.list,fg_color=BACKGROUND_COLOR)
             row.pack(fill="x",padx=10,pady=5)
             ctk.CTkLabel(row,text=entry["season_name"],font=HEADING_FONT,text_color=TEXT_COLOR,width=200,anchor="w").pack(side="left",padx=10)
             ctk.CTkLabel(row,text="Score:"+str(entry["score"]),font=NORMAL_FONT,text_color=TEXT_COLOR,width=80,anchor="w").pack(side="left",padx=10)
             ctk.CTkLabel(row,text=entry["date_time"],font=NORMAL_FONT,text_color=TEXT_COLOR,anchor="e").pack(side="right",padx=10)
 
+#The window set up class , manages what pages show
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -197,16 +220,17 @@ class App(ctk.CTk):
         self.username=None
         self.answers={}
         self.wrist_data=None
-        create_history_table()
-        sidebar=ctk.CTkFrame(self,width=160,fg_color=SIDEBAR_COLOR, corner_radius=0)
-        sidebar.pack(side="left",fill="y")
+        create_history_table() 
+        sidebar=ctk.CTkFrame(self,width=160,fg_color=SIDEBAR_COLOR, corner_radius=0) #Creates sidebar navigaten to chage pages that are stacked on one another
+        sidebar.pack(side="left",fill="y") #Stretches to window hight 
         ctk.CTkButton(sidebar,text="Home",fg_color=BUTTON_COLOR,hover_color=BUTTON_HOVER_COLOR,text_color=TEXT_COLOR,font=BUTTON_FONT,command=lambda:self.show_page("home")).pack(padx=15,pady=(30,5),fill="x")
         ctk.CTkButton(sidebar,text="Questionnaire",fg_color=BUTTON_COLOR,hover_color=BUTTON_HOVER_COLOR,text_color=TEXT_COLOR,font=BUTTON_FONT,command=lambda:self.show_page("questionnaire")).pack(padx=15,pady=5,fill="x")
         ctk.CTkButton(sidebar,text="Photo",fg_color=BUTTON_COLOR,hover_color=BUTTON_HOVER_COLOR,text_color=TEXT_COLOR,font=BUTTON_FONT,command=lambda:self.show_page("photo")).pack(padx=15,pady=5,fill="x")
         ctk.CTkButton(sidebar,text="Results",fg_color=BUTTON_COLOR,hover_color=BUTTON_HOVER_COLOR,text_color=TEXT_COLOR,font=BUTTON_FONT,command=lambda:self.show_page("results")).pack(padx=15,pady=5,fill="x")
         ctk.CTkButton(sidebar,text="History",fg_color=BUTTON_COLOR,hover_color=BUTTON_HOVER_COLOR,text_color=TEXT_COLOR,font=BUTTON_FONT,command=lambda:self.show_page("history")).pack(padx=15,pady=5,fill="x")
+#Lambda waits for the button to be clicked before ruinning the function
         main=ctk.CTkFrame(self,fg_color=BACKGROUND_COLOR)
-        main.pack(side="right",fill="both",expand=True)
+        main.pack(side="right",fill="both",expand=True)#Takes up horizontal space remaining and stretches
         self.pages={
              "home":Home(main,self),
              "questionnaire":Questionnaire_Page(main,self),
@@ -214,20 +238,20 @@ class App(ctk.CTk):
              "results":Results(main,self),
              "history":History(main,self)
 
-        }
+        }# All five pages stacked 
         for page in self.pages.values():
-             page.place(relx=0,rely=0,relwidth=1,relheight=1)
+             page.place(relx=0,rely=0,relwidth=1,relheight=1) #Position of all pages like a grid
         self.show_page("home")
     def show_page(self,name):
             if name=="history":
                   self.pages["history"].clear()
-            self.pages[name].tkraise()
+            self.pages[name].tkraise() #Shows page
     def run_classification(self):
              result=classify_season(self.answers,self.wrist_data)
              save_analysis(self.username,result["season_name"],result["score"],self.answers)
              self.pages["results"].show_results(result)
-             self.show_page("results")
-if __name__=="__main__":
+             self.show_page("results")# Runs classification and stores it , then shows results
+if __name__=="__main__": #File runs from this module, and starts tkinter loop for the user input
     app=App()
     app.mainloop()
 

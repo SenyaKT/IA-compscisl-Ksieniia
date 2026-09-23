@@ -1,9 +1,13 @@
+#16 season color palettes dicts and scoring alorithm to classify season
+#Classifies user based on their answer and writs photo
 SEASONS={
     "True Spring":{
         "description":"Warm, clear and fresh colors. Has golden undertone with vibrant and lively colors.",
         "best_colors":["#E8956D","#F4C842","#F4845F","#8BC34A","#40C9A2","#FFDAB9","#FF8C69","#C8E6C9","#FFB347","#FFF176"],
         "outfit_combinations":[["#E8956D","#8BC34A","#FFF176"],["#F4845F","#40C9A2","#FFDAB9"],["#FF8C69","#C8E6C9","#FFB347"]]
     },
+    #Color description and hex codes for each season stored and can be acesssed with key value
+    #Outfit combinations are in list of lists , so each has 3 colors
     "Light Spring":{
         "description":"Warm, and very light colors. Has delicate peachy tones with a soft golden glow ",
         "best_colors":["#FFD6C2","#FFF3C4","#D4EDDA","#C8E6F4","#FFB6C1","#FFDAB9","#E8F5E9","#FFF9C4","#FCE4EC","#E1F5FE"],
@@ -82,19 +86,24 @@ SEASONS={
 
 }
 
+#Basic Definition of each season
 WARM_SEASONS=["True Spring","Light Spring","Bright Spring","Warm Spring","True Autumn","Deep Autumn","Soft Autumn","Warm Autumn"]
 COOL_SEASONS=["True Summer","Light Summer","Soft Summer","Cool Summer","True Winter","Deep Winter","Bright Winter","Cool Winter"]
 
 def classify_season(answers, wrist_data=None):
-    scores={}
+    #takes answers as dict 
+    #optionally gets wristdata with keys
+    scores={} #initial score of 0
     for name in SEASONS:
         scores[name]=0
+    #Undertone as important factor scoring from 4 to 5 depending on match with user answer and photo analysis
     undertone=answers.get("skin_undertone","neutral")
     if wrist_data:
         photo_undertone=wrist_data.get("undertone","Neutral").lower()
         weight=5 if photo_undertone==undertone else 4
     else:
         weight=4
+    #adds points 
     if undertone=="warm":
         for s in WARM_SEASONS:
             scores[s]+=weight
@@ -104,6 +113,7 @@ def classify_season(answers, wrist_data=None):
     else:
         for s in SEASONS:
             scores[s]+=1
+    #skin depth has 3 points
     depth=answers.get("skin_depth","medium")
     light_seasons=["Light Spring","Light Summer","True Spring","True Summer","Soft Summer","Bright Spring","Cool Summer"]
     deep_seasons=["Deep Autumn","Deep Winter","True Autumn","True Winter","Warm Autumn","Cool Winter","Bright Winter"]
@@ -113,7 +123,8 @@ def classify_season(answers, wrist_data=None):
     elif depth=="deep":
         for s in deep_seasons:
             scores[s]+=3
-    
+
+    #contrast has 3 points     
     contrast=answers.get("contrast_level","medium")
     hight_contrast=["True Winter","Bright Winter","Deep Winter","Bright Spring","Deep Autumn","Cool Winter"]
     low_contrast = ["Light Spring","Light Summer","Soft Summer","Soft Autumn"]
@@ -123,7 +134,7 @@ def classify_season(answers, wrist_data=None):
     elif contrast=="low":
         for s in low_contrast:
             scores[s]+=3
-
+    #skin clarity has 3 point
     clarity=answers.get("skin_clarity","muted")
     if clarity=="bright":
         for s in ["Bright Spring","Bright Winter","True Spring","True Winter"]:
@@ -131,7 +142,7 @@ def classify_season(answers, wrist_data=None):
     elif clarity=="muted":
         for s in ["Soft Summer","Soft Autumn","True Summer","True Autumn"]:
             scores[s]+=3
-
+    #hair color has 1 point
     hair=answers.get("hair_color","medium_brown")
     hair_map={
         "blonde":["Light Spring","True Spring","Bright Spring"],
@@ -145,7 +156,8 @@ def classify_season(answers, wrist_data=None):
     }
     for s in hair_map.get(hair,[]):
         scores[s]+=1
-        
+
+    #eye color has 1 point
     eye=answers.get("eye_color","medium_brown")
     eye_map= {
         "light_blue":["True Summer","Light Summer", "Cool Summer","Cool Winter"],
@@ -155,10 +167,11 @@ def classify_season(answers, wrist_data=None):
         "medium_brown":["True Autumn", "Soft Autumn","Soft Summer","True Summer"],
         "dark_brown":["Deep Autumn","True Winter","Deep Winter","Warm Autumn"],
         "black":["True Winter","Deep Winter","Bright Winter","Cool Winter"]
-    }
+    } 
     for s in eye_map.get(eye,[]):
         scores[s]+=1
 
+#lip color has 1 point
     lip=answers.get("lip_color","neutral")
     lip_map={
         "cool_pink":  ["True Summer","Cool Summer","True Winter","Cool Winter","Bright Winter"],
@@ -168,22 +181,24 @@ def classify_season(answers, wrist_data=None):
     }
     for s in lip_map.get(lip,[]):
         scores[s]+=1
-    
+
+    #vein color has 1 point
     vein=answers.get("vein_color","mixed")
     if wrist_data:
         photo_vein=wrist_data.get("vein_color","Mixed")
         if photo_vein=="Blue/Purple" and vein!="green":
             vein="blue_purple"
         elif photo_vein=="Green" and vein!="blue_purple":
-            vein="green"
+            vein="green" # uses and to check photo analysis and user answer
     if vein=="green":
-        for s in WARM_SEASONS:
+        for s in WARM_SEASONS: #for loop to score all warm seasons if vein is green
             scores[s]+=1
     elif vein=="blue_purple":
         for s in COOL_SEASONS:
             scores[s]+=1
 
-    best=max(scores, key=lambda k: scores[k])
+#Finds the best season
+    best=max(scores, key=lambda k: scores[k]) # formula to find key with max value
     result=dict(SEASONS[best])
     result["season_name"]=best
     result["score"]=scores[best]

@@ -1,3 +1,6 @@
+#8 questions stored as list of dictionaries for user to answer
+#Used in main.py and seasion classification and options key has 2 values for the radio button
+
 QUESTIONS=[
     { 
         "key": "skin_undertone",
@@ -83,8 +86,8 @@ QUESTIONS=[
     }          
 ]
 
-def answered(answers):
-    for q in QUESTIONS:
+def answered(answers): #Validates if all are answered to not procede to next page empty
+    for q in QUESTIONS: #Loops through to check if answered 
         if not answers.get(q["key"]):
             return False
     return True
