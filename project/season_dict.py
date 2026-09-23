@@ -198,6 +198,12 @@ def classify_season(answers, wrist_data=None):
             scores[s]+=1
 
 #Finds the best season
+    if undertone =="cool" and depth=="deep" and contrast =="high":
+        scores["Deep Winter"]+=4
+    if undertone=="cool" and clarity=="bright" and contrast=="high":
+        scores["Bright Winter"]+= 4
+    if undertone =="cool" and depth=="light" and contrast =="low":
+        scores["Cool Summer"]+=4
     best=max(scores, key=lambda k: scores[k]) # formula to find key with max value
     result=dict(SEASONS[best])
     result["season_name"]=best

@@ -5,6 +5,7 @@ import cv2 # OpenCV used for image reading. Converts color between formats and u
 import numpy as np #Pixel array operations , averaging
 import os #File path
 from datetime import datetime  #Timestamp
+import database
 
 
 
@@ -16,9 +17,9 @@ class WristColorAnalyzer:
     #from color_analyzer import WristColorAnalyzer
     ALLOWED_FORMATS=["jpg", "jpeg", "png"]
 
-    def __init__(self,image_path, db_name="color_database.db"): #Emptly in the start
+    def __init__(self,image_path, db_name=None): #Emptly in the start
         self.image_path = image_path
-        self.db_name = db_name
+        self.db_name = db_name or database.DATABASE_NAME
         self.image = None #Function load_image() puts it
         self.skin_color=None #array from numpy [R, G, B]
         self.skin_description=None
@@ -76,6 +77,8 @@ class WristColorAnalyzer:
     def analyze(self):
         self.validate_image() #Validates image
         self.load_image()
+        if min(self.image.shape[:2])<40: #Size of image check
+            raise ValueError("Image is too small, please choose a larger wrist image")
         center=self.get_center_region()
         brightness=np.mean(center) #Checks mean brightness
         if brightness<40:

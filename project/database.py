@@ -7,8 +7,9 @@ import sqlite3 #database management
 import json # python dicts to strings (for SQLite to work as it uses TEXT)
 import hashlib # Hashing of usernames for privacy called SHA256
 from datetime import datetime #creates timestampsfor saved records
+import os
 
-DATABASE_NAME="app.db"
+DATABASE_NAME=os.path.join(os.path.dirname(os.path.abspath(__file__)),"app.db")
 
 #OOP with private attributes that stores data for history table
 class HistoryRecord: 

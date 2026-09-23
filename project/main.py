@@ -34,7 +34,7 @@ WINDOW_WIDTH=1000
 WINDOW_HEIGHT=700
 
 #Uploaded photos are copied to this folder
-UPLOAD_FOLDER="uploads"
+UPLOAD_FOLDER=os.path.join(os.path.dirname(os.path.abspath(__file__)),"uploads")
 
 #Five page Classes 
 
@@ -118,7 +118,8 @@ class Photo(ctk.CTkFrame):
             return #if cancelled
         os.makedirs(UPLOAD_FOLDER, exist_ok=True) #Creates folder if doesnt exist
         destination=os.path.join(UPLOAD_FOLDER,os.path.basename(path))
-        shutil.copy(path,destination) #copy to local
+        if not os.path.exists(destination) or not os.path.samefile(path,destination):
+            shutil.copy(path,destination) #copy to local if not same as the ones in there to not crash
         self.image_path=destination
         #Updates label with name of file
         self.preview.configure(text=os.path.basename(path))
@@ -247,10 +248,21 @@ class App(ctk.CTk):
                   self.pages["history"].clear()
             self.pages[name].tkraise() #Shows page
     def run_classification(self):
-             result=classify_season(self.answers,self.wrist_data)
-             save_analysis(self.username,result["season_name"],result["score"],self.answers)
-             self.pages["results"].show_results(result)
-             self.show_page("results")# Runs classification and stores it , then shows results
+        #Checks if everything is filled out before proceeding
+        if not self.username:
+            messagebox.showwarning("Name required", "Please enter your name on the Home page.")
+            self.show_page("home")
+            return
+        if not answered(self.answers):
+            messagebox.showwarning("Incomplete", "Please answer all questions.")
+            self.show_page("questionnaire")
+            return
+        
+        result=classify_season(self.answers,self.wrist_data)
+        save_analysis(self.username,result["season_name"],result["score"],self.answers)
+        self.pages["results"].show_results(result)
+        self.show_page("results")# Runs classification and stores it , then shows results
+
 if __name__=="__main__": #File runs from this module, and starts tkinter loop for the user input
     app=App()
     app.mainloop()
