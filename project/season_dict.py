@@ -99,7 +99,7 @@ def classify_season(answers, wrist_data=None):
     #Undertone as important factor scoring from 4 to 5 depending on match with user answer and photo analysis
     undertone=answers.get("skin_undertone","neutral")
     if wrist_data:
-        photo_undertone=wrist_data.get("undertone","Neutral").lower()
+        photo_undertone=wrist_data.get("undertone","Neutral").lower() 
         weight=5 if photo_undertone==undertone else 4
     else:
         weight=4
@@ -197,13 +197,14 @@ def classify_season(answers, wrist_data=None):
         for s in COOL_SEASONS:
             scores[s]+=1
 
-#Finds the best season
+
     if undertone =="cool" and depth=="deep" and contrast =="high":
         scores["Deep Winter"]+=4
     if undertone=="cool" and clarity=="bright" and contrast=="high":
         scores["Bright Winter"]+= 4
     if undertone =="cool" and depth=="light" and contrast =="low":
         scores["Cool Summer"]+=4
+    #Finds the best season
     best=max(scores, key=lambda k: scores[k]) # formula to find key with max value
     result=dict(SEASONS[best])
     result["season_name"]=best

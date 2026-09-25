@@ -86,10 +86,12 @@ class WristColorAnalyzer:
         if brightness> 220:
             raise ValueError("Image is too bright, take a picture with lower exposure or different lighing.")
         blurred=cv2.GaussianBlur(center,(3,3),0) #Applies blur to make it even 
-        hsv=cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV) #Converts BGR to HSV (Hue, Saturation, Value) which is easier for skin detection
-        mask_low = cv2.inRange(hsv,np.array([0,15,50]),np.array([30,255,255])) #Red hues - Skin pixel mask with the max and min treshholds. Excludes gray pixels, excludes dar pixels
+        hsv=cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV) #Converts BGR to HSV (Hue, Saturation, Value) 
+        #which is easier for skin detection
+        mask_low = cv2.inRange(hsv,np.array([0,15,50]),np.array([30,255,255])) #Red hues - 
+        #- Skin pixel mask with the max and min treshholds. Excludes gray pixels, excludes dar pixels
         #Red repeats twice on the Hue 0-180 with 0-30 and 170-180. 
-        mask_high = cv2.inRange(hsv, np.array([170,15,50]), np.array([180,255,255])) #Same but the top Red values 
+        mask_high = cv2.inRange(hsv, np.array([170,15,50]), np.array([180,255,255]))#Same but the top Red values 
         skin_mask = cv2.bitwise_or(mask_low, mask_high) #Combines both red masks 
         skin_pixels=center[skin_mask>0]  #Only where masks are white
         if len(skin_pixels) == 0 :

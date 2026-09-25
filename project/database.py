@@ -14,8 +14,12 @@ DATABASE_NAME=os.path.join(os.path.dirname(os.path.abspath(__file__)),"app.db")
 #OOP with private attributes that stores data for history table
 class HistoryRecord: 
     def __init__(self, username, season, score, answers, timestamp=None): #Initializes the recerord
-        self.__username=hashlib.sha256(username.encode()).hexdigest() #hashed with SHA256 so that real names are not visible anymore, creatings a unique hash with 64 character hexadecimal for each username, except duplicates.
-        self.__season=season #"__"private attributes , needs getters and setters to change or access, cann not be accessed from outside
+        self.__username=hashlib.sha256(username.encode()).hexdigest() 
+        #hashed with SHA256 so that real names are not visible anymore, 
+        #creatings a unique hash with 64 character hexadecimal for each username, except duplicates.
+        self.__season=season #"__"private attributes,
+        #needs getters and setters to change or access, 
+        #cann not be accessed from outside
         self.__score=score
         self.__answers=json.dumps(answers) # J son converts from dict to string
         self.__date= datetime.now().strftime("%Y-%m-%d %H:%M:%S")
